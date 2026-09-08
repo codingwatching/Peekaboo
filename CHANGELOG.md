@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 4.3.3 - 2026-09-08
 
 **Highlights:** Prevent accidental GUI host launches and read Firestaff manifests more safely.
