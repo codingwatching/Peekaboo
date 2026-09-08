@@ -344,7 +344,8 @@ verify_binary_artifact() {
     require_command lipo
     binary_size=$(stat -f%z "$binary_path")
     (( binary_size > 1000000 )) || fail "$label binary is unexpectedly small: $binary_size bytes"
-    file "$binary_path" | grep -q 'Mach-O' || fail "$label binary is not Mach-O: $binary_path"
+    # Drain output so file cannot receive SIGPIPE after its first matching line.
+    file "$binary_path" | grep -F 'Mach-O' >/dev/null || fail "$label binary is not Mach-O: $binary_path"
     codesign --verify --strict --verbose=2 "$binary_path"
     codesign --verify --strict -R="$CLI_SIGN_REQUIREMENT" "$binary_path"
     verify_release_binary_entitlements "$binary_path" "$label"

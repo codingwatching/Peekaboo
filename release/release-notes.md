@@ -6,3 +6,4 @@
 - Read immutable Firestaff frames across atomic updates, reject detectable in-place rewrites, and add opt-in byte limits while preserving the unlimited default; thanks @SebTardif for #703.
 - Honor `config edit --print-path` without creating a configuration file or launching an editor. #707.
 - Fix generated Homebrew formula smoke tests to recognize the v4 `Usage` header. #702.
+- Prevent intermittent release verification failures when inspecting universal binaries, and keep release test fixtures out of publication directories.

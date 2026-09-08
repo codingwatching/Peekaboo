@@ -304,7 +304,7 @@ verify_app_payload() {
   executable_size="$(stat -f%z "$executable_path")"
   (( executable_size > 1000000 )) || fail "Main executable is unexpectedly small: $executable_size bytes"
 
-  file "$executable_path" | grep -q 'Mach-O' ||
+  file "$executable_path" | grep -F 'Mach-O' >/dev/null ||
     fail "Main executable is not a Mach-O binary: $executable_path"
 
   source_commit="$(/usr/libexec/PlistBuddy -c 'Print :PeekabooSourceCommit' \
@@ -380,7 +380,7 @@ verify_nested_developer_id_signatures() {
   local count=0
 
   while IFS= read -r -d '' candidate; do
-    if file -b "$candidate" | grep -q 'Mach-O'; then
+    if file -b "$candidate" | grep -F 'Mach-O' >/dev/null; then
       codesign --verify --strict --verbose=2 "$candidate"
       verify_developer_id_signature "$candidate"
       count=$((count + 1))
