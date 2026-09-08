@@ -353,8 +353,8 @@ verify_binary_artifact() {
     MAC_RELEASE_CODESIGN_IDENTITY="$CLI_SIGN_IDENTITY" \
         MAC_RELEASE_CODESIGN_TEAM_ID="$CLI_SIGN_TEAM_ID" \
         "$PROJECT_ROOT/scripts/verify-swift-runtime-libraries.sh" "$binary_path" "$(dirname "$binary_path")"
-    authority=$(codesign -dv --verbose=4 "$binary_path" 2>&1 | sed -n 's/^Authority=//p' | head -1)
-    team_id=$(codesign -dv --verbose=4 "$binary_path" 2>&1 | sed -n 's/^TeamIdentifier=//p' | head -1)
+    authority=$(codesign -dv --verbose=4 "$binary_path" 2>&1 | sed -n 's/^Authority=//p' | sed -n '1p')
+    team_id=$(codesign -dv --verbose=4 "$binary_path" 2>&1 | sed -n 's/^TeamIdentifier=//p' | sed -n '1p')
     [ "$authority" = "$CLI_SIGN_IDENTITY" ] ||
         fail "$label signer mismatch: expected '$CLI_SIGN_IDENTITY', got '$authority'"
     [ "$team_id" = "$CLI_SIGN_TEAM_ID" ] ||
@@ -372,12 +372,12 @@ verify_binary_artifact() {
     fi
 
     version_output=$("$binary_path" --version)
-    printf '%s\n' "$version_output" | grep -Fq "Peekaboo $VERSION" ||
+    printf '%s\n' "$version_output" | grep -F "Peekaboo $VERSION" >/dev/null ||
         fail "$label version output does not contain Peekaboo $VERSION: $version_output"
-    if printf '%s\n' "$version_output" | grep -Fq -- '-dirty'; then
+    if printf '%s\n' "$version_output" | grep -F -- '-dirty' >/dev/null; then
         fail "$label was built from a dirty tree: $version_output"
     fi
-    if printf '%s\n' "$version_output" | grep -Fq 'unknown'; then
+    if printf '%s\n' "$version_output" | grep -F 'unknown' >/dev/null; then
         fail "$label has incomplete version provenance: $version_output"
     fi
     provenance_json=$("$binary_path" --version --json)
@@ -476,7 +476,7 @@ verify_cli_tarball() {
     verify_dir=$(mktemp -d /tmp/peekaboo-cli-verify.XXXXXX)
 
     [ -f "$tarball_path" ] || fail "CLI tarball missing: $tarball_path"
-    tar -tzf "$tarball_path" | grep -Fxq "$CLI_ARTIFACT_DIR/peekaboo" ||
+    tar -tzf "$tarball_path" | grep -Fx "$CLI_ARTIFACT_DIR/peekaboo" >/dev/null ||
         fail "CLI tarball does not contain $CLI_ARTIFACT_DIR/peekaboo"
     tar -xzf "$tarball_path" -C "$verify_dir"
     verify_binary_artifact "$verify_dir/$CLI_ARTIFACT_DIR/peekaboo" "CLI tarball"
@@ -489,7 +489,7 @@ verify_npm_tarball() {
     verify_dir=$(mktemp -d /tmp/peekaboo-npm-verify.XXXXXX)
 
     [ -f "$npm_path" ] || fail "npm package missing: $npm_path"
-    tar -tzf "$npm_path" | grep -Eq '^(package/)?peekaboo$|^package/peekaboo$' ||
+    tar -tzf "$npm_path" | grep -E '^(package/)?peekaboo$|^package/peekaboo$' >/dev/null ||
         fail "npm package does not contain peekaboo binary"
     tar -xzf "$npm_path" -C "$verify_dir"
     if [ -x "$verify_dir/package/peekaboo" ]; then

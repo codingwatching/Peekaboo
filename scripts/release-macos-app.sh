@@ -365,8 +365,8 @@ verify_developer_id_signature() {
   local authority
   local team_id
 
-  authority="$(codesign -dv --verbose=4 "$bundle" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
-  team_id="$(codesign -dv --verbose=4 "$bundle" 2>&1 | sed -n 's/^TeamIdentifier=//p' | head -1)"
+  authority="$(codesign -dv --verbose=4 "$bundle" 2>&1 | sed -n 's/^Authority=//p' | sed -n '1p')"
+  team_id="$(codesign -dv --verbose=4 "$bundle" 2>&1 | sed -n 's/^TeamIdentifier=//p' | sed -n '1p')"
   [[ "$authority" == "$EXPECTED_SIGN_IDENTITY" ]] ||
     fail "$bundle is signed with '$authority'; expected '$EXPECTED_SIGN_IDENTITY'"
   [[ "$team_id" == "$EXPECTED_TEAM_ID" ]] ||

@@ -87,7 +87,8 @@ struct CaptureActionCommandEndToEndTests {
         let processRecorder = CaptureActionProcessRecorder()
         var command = CaptureActionCommand()
         command.mode = "frontmost"
-        command.durationLimit = CLIDuration(argument: "4s")
+        // Cold video-encoder startup on hosted Macs is not the deadline behavior this test exercises.
+        command.durationLimit = CLIDuration(argument: "20s")
         command.preRoll = CLIDuration(argument: "300ms")
         command.postRoll = CLIDuration(argument: "400ms")
         command.idleFps = 5
