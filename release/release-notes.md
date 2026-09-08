@@ -1,10 +1,8 @@
-## 4.3.2 - 2026-09-07
+## 4.3.3 - 2026-09-08
 
-**Highlights:** Explicit typing dispatch acceptance for scripts, plus more reliable app installation and release recovery.
+**Highlights:** Prevent accidental GUI host launches and read Firestaff manifests more safely.
 
-- Let standalone scripts opt into `type --accept-dispatched` while preserving strict defaults, unverified outcomes, retry warnings, and confirmed-only character counts; thanks @jandubois for #686.
-- Recover transactional app installs using authenticated GUI Bridge identity when atomic socket publication leaves `lsof` reporting the temporary bind path.
-- Recover authenticated draft releases and accept npm's singleton-array publication metadata without weakening validation.
-- Treat release-preparation binary paths literally during permission, architecture, and help checks to prevent shell interpretation.
-- Fix the screenshot command documentation's link to the exact-window capture testing guide.
-- Update pnpm setup in release validation and hosted build preparation to 6.1.0.
+- Refuse CLI-style invocations of Peekaboo.app before capture or Bridge startup, with guidance to use the separate `peekaboo` CLI binary. #706.
+- Read immutable Firestaff frames across atomic updates, reject detectable in-place rewrites, and add opt-in byte limits while preserving the unlimited default; thanks @SebTardif for #703.
+- Honor `config edit --print-path` without creating a configuration file or launching an editor. #707.
+- Fix generated Homebrew formula smoke tests to recognize the v4 `Usage` header. #702.
