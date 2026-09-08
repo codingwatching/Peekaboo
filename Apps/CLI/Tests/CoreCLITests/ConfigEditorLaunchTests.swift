@@ -34,6 +34,24 @@ struct ConfigEditorLaunchTests {
     }
 
     @Test
+    func `CLI print-path does not create configuration or launch an editor`() async throws {
+        try await self.withTempConfigDir { dir in
+            let resolved = try CommanderRuntimeRouter.resolve(argv: [
+                "peekaboo", "config", "edit", "--print-path",
+                "--editor", dir.appendingPathComponent("missing-editor").path,
+            ])
+            var command = try CommanderCLIBinder.instantiateCommand(
+                ofType: ConfigCommand.EditCommand.self,
+                parsedValues: resolved.parsedValues
+            )
+
+            #expect(command.printPath)
+            try await command.run(using: self.makeRuntime())
+            #expect(!FileManager.default.fileExists(atPath: PeekabooCore.ConfigurationManager.configPath))
+        }
+    }
+
+    @Test
     func `EditCommand bounds a non-exiting editor`() async throws {
         try await self.withTempConfigDir { dir in
             let fileManager = FileManager.default
@@ -52,12 +70,15 @@ struct ConfigEditorLaunchTests {
             command.editor = editor.path
             command.timeout = .seconds(1)
 
-            let startedAt = Date()
+            let runtime = self.makeRuntime()
+            let startedAt = ContinuousClock.now
             let exitCode = await #expect(throws: ExitCode.self) {
-                try await command.run(using: self.makeRuntime())
+                try await command.run(using: runtime)
             }
             #expect(exitCode == ExitCode.failure)
-            #expect(Date().timeIntervalSince(startedAt) < 3)
+            // The one-second timeout permits two more seconds of termination cleanup.
+            // Leave scheduling headroom while staying below the editor's eight-second natural exit.
+            #expect(startedAt.duration(to: .now) < .seconds(5))
 
             let pidText = try String(contentsOf: pidFile, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
