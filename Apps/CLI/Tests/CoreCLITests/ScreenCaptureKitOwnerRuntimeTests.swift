@@ -1139,7 +1139,7 @@ extension ScreenCaptureKitOwnerRuntimeTests {
                 candidates: [candidate],
                 identity: identity,
                 handshake: { _, _ in
-                    try? await Task.sleep(for: .milliseconds(20))
+                    withUnsafeCurrentTask { $0?.cancel() }
                     return Self.handshake(
                         processIdentifier: 3131,
                         processStartIdentity: 4141,
@@ -1151,8 +1151,6 @@ extension ScreenCaptureKitOwnerRuntimeTests {
                 }
             )
         }
-        try await Task.sleep(for: .milliseconds(1))
-        uncooperativeHandshake.cancel()
         await #expect(throws: CancellationError.self) {
             _ = try await uncooperativeHandshake.value
         }
@@ -1296,7 +1294,7 @@ extension ScreenCaptureKitOwnerRuntimeTests {
                 permissionRejections: &permissionRejections,
                 makeRemoteServices: Self.makeInertRemoteServices,
                 handshake: { _, _ in
-                    try? await Task.sleep(for: .milliseconds(20))
+                    withUnsafeCurrentTask { $0?.cancel() }
                     return Self.handshake(
                         processIdentifier: 4242,
                         processStartIdentity: 9001
@@ -1305,8 +1303,6 @@ extension ScreenCaptureKitOwnerRuntimeTests {
             )
         }
 
-        try await Task.sleep(for: .milliseconds(1))
-        task.cancel()
         await #expect(throws: CancellationError.self) {
             _ = try await task.value
         }
