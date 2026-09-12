@@ -4006,9 +4006,15 @@ test('managed guardian cleans only its owned child even when the PID receipt is 
   let ackGuardian = null;
   try {
     const binary = path.join(root, 'managed-launch-suspended');
+    const guardianSource = path.join(root, 'managed-launch-suspended.c');
+    const source = fs.readFileSync(path.join(toolRoot, 'managed-launch-suspended.c'), 'utf8');
+    const receiptWrite = '    char bytes[96];';
+    assert.equal(source.split(receiptWrite).length, 2);
+    // Expose the empty receipt before its write; only the protocol or exit is a readiness barrier.
+    fs.writeFileSync(guardianSource, source.replace(receiptWrite, `    sleep_milliseconds(100);\n${receiptWrite}`));
     const build = spawnSync('/usr/bin/xcrun', [
       'cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-      path.join(toolRoot, 'managed-launch-suspended.c'), '-o', binary, '-lproc',
+      guardianSource, '-o', binary, '-lproc',
     ], { encoding: 'utf8' });
     assert.equal(build.status, 0, build.stderr);
     sentinel = spawn('/bin/sleep', ['30'], { stdio: 'ignore' });
@@ -4027,7 +4033,7 @@ test('managed guardian cleans only its owned child even when the PID receipt is 
       const timeout = setTimeout(() => reject(new Error('guardian did not publish SPAWNED')), 5000);
       guardian.stdout.on('data', (bytes) => {
         output += bytes.toString('utf8');
-        const line = output.split('\n').find((entry) => entry.startsWith('SPAWNED '));
+        const line = output.split('\n').slice(0, -1).find((entry) => entry.startsWith('SPAWNED '));
         if (line) {
           clearTimeout(timeout);
           resolve(line);
@@ -4065,22 +4071,10 @@ test('managed guardian cleans only its owned child even when the PID receipt is 
       pipeGuardian.once('close', (code, signal) => resolve({ code, signal }));
     });
     pipeGuardian.stdout.destroy();
-    await new Promise((resolve, reject) => {
-      const startedAt = Date.now();
-      const interval = setInterval(() => {
-        if (fs.existsSync(pipePIDPath)) {
-          clearInterval(interval);
-          resolve();
-        } else if (Date.now() - startedAt >= 5000) {
-          clearInterval(interval);
-          reject(new Error('SIGPIPE guardian did not publish its child PID'));
-        }
-      }, 5);
-    });
-    const pipeChildPID = JSON.parse(fs.readFileSync(pipePIDPath)).pid;
     const pipeGuardianResult = await pipeGuardianClosed;
     assert.equal(pipeGuardianResult.code, 2);
     assert.equal(pipeGuardianResult.signal, null);
+    const pipeChildPID = JSON.parse(fs.readFileSync(pipePIDPath)).pid;
     assert.throws(() => process.kill(pipeChildPID, 0), /ESRCH/);
 
     const ackPIDPath = path.join(root, 'ack-child-pid.json');
@@ -4101,12 +4095,12 @@ test('managed guardian cleans only its owned child even when the PID receipt is 
     await new Promise((resolve, reject) => {
       const startedAt = Date.now();
       const interval = setInterval(() => {
-        if (fs.existsSync(ackPIDPath)) {
+        if (ackProtocol.split('\n').slice(0, -1).some((entry) => entry.startsWith('SPAWNED '))) {
           clearInterval(interval);
           resolve();
         } else if (Date.now() - startedAt >= 5000) {
           clearInterval(interval);
-          reject(new Error('content-bound guardian did not publish its child PID'));
+          reject(new Error('content-bound guardian did not announce its child PID'));
         }
       }, 5);
     });
