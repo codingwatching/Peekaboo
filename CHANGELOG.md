@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 4.3.4 - 2026-09-11
 
 **Highlights:** Restore provider-compatible MCP tools and frontmost daemon captures.
