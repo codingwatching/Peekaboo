@@ -51,9 +51,9 @@ peekaboo see --app Finder --json
 
 That is the core loop: observe the current screen, choose an element from the result, and act on it.
 
-## What's new in 4.3.3
+## What's new in 4.3.4
 
-Peekaboo 4.3.3 prevents accidental GUI host launches when the app bundle is invoked as the CLI, makes immutable Firestaff manifest reads safer with optional byte limits, and restores side-effect-free `config edit --print-path` queries. Generated Homebrew smoke tests now recognize the v4 help header.
+Peekaboo 4.3.4 restores provider-compatible `click` and `paste` MCP schemas while preserving runtime validation, fixes frontmost daemon captures by retaining their application identity and capture mode, and updates SwiftLog for logging dispatch and toolchain compatibility fixes.
 
 ## Automate an app
 

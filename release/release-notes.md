@@ -1,9 +1,7 @@
-## 4.3.3 - 2026-09-08
+## 4.3.4 - 2026-09-11
 
-**Highlights:** Prevent accidental GUI host launches and read Firestaff manifests more safely.
+**Highlights:** Restore provider-compatible MCP tools and frontmost daemon captures.
 
-- Refuse CLI-style invocations of Peekaboo.app before capture or Bridge startup, with guidance to use the separate `peekaboo` CLI binary. #706.
-- Read immutable Firestaff frames across atomic updates, reject detectable in-place rewrites, and add opt-in byte limits while preserving the unlimited default; thanks @SebTardif for #703.
-- Honor `config edit --print-path` without creating a configuration file or launching an editor. #707.
-- Fix generated Homebrew formula smoke tests to recognize the v4 `Usage` header. #702.
-- Prevent intermittent release verification failures when inspecting universal binaries, and keep release test fixtures out of publication directories.
+- Publish flat `click` and `paste` MCP schemas for clients that forward tools to Anthropic, while preserving runtime target, receipt, and foreground-consent validation; thanks @goutamadwant for #711 and @muellah for #708.
+- Preserve the observed application identity and frontmost capture mode across exact-window capture so the daemon can validate frontmost screenshots without relaxing owner-generation or window checks. #710.
+- Update SwiftLog to 1.15.1 for default logging dispatch and Swift toolchain compatibility fixes.
