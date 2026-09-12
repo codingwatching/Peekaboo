@@ -17,6 +17,7 @@ public struct ClickTool: MCPTool {
         """
         Clicks on UI elements or coordinates.
         Supports element queries, specific IDs from `see` or `inspect_ui`, or raw coordinates.
+        Choose exactly one of on, query, or coords, and at most one of double, triple, right, or middle.
         Background delivery is the default. Background coordinates require a nonempty snapshot or coordinate_reference
         from a fresh exact-window `see`; pid alone is never a safe coordinate target. Set `foreground` to true only for
         intentional shared-pointer input, which may omit the capture reference.
@@ -25,7 +26,7 @@ public struct ClickTool: MCPTool {
     }
 
     public var inputSchema: Value {
-        let baseSchema = SchemaBuilder.object(
+        SchemaBuilder.object(
             properties: [
                 "query": SchemaBuilder.string(
                     description: """
@@ -98,67 +99,6 @@ public struct ClickTool: MCPTool {
                     description: "Foreground-only modifier keys. Requires foreground=true and a fresh exact snapshot."),
             ],
             required: [])
-
-        guard case let .object(fields) = baseSchema else { return baseSchema }
-        var schema = fields
-        schema["oneOf"] = .array(Self.targetRouteSchemas)
-        schema["allOf"] = .array([Self.exclusiveClickVariantSchema])
-        return .object(schema)
-    }
-
-    private static var targetRouteSchemas: [Value] {
-        [
-            self.exclusiveTargetRoute("on"),
-            self.exclusiveTargetRoute("query"),
-            self.exclusiveTargetRoute("coords", additionalFields: [
-                "anyOf": .array([
-                    self.requiredConstant("foreground", value: true),
-                    self.requiredConstant("background", value: false),
-                    .object(["required": .array([.string("snapshot")])]),
-                    .object(["required": .array([.string("coordinate_reference")])]),
-                ]),
-            ]),
-        ]
-    }
-
-    private static func exclusiveTargetRoute(
-        _ name: String,
-        additionalFields: [String: Value] = [:]) -> Value
-    {
-        let otherTargets = ["on", "query", "coords"].filter { $0 != name }
-        var fields = additionalFields
-        fields["required"] = .array([.string(name)])
-        fields["not"] = .object([
-            "anyOf": .array(otherTargets.map { target in
-                .object(["required": .array([.string(target)])])
-            }),
-        ])
-        return .object(fields)
-    }
-
-    private static func requiredConstant(_ name: String, value: Bool) -> Value {
-        .object([
-            "properties": .object([name: .object(["const": .bool(value)])]),
-            "required": .array([.string(name)]),
-        ])
-    }
-
-    private static var exclusiveClickVariantSchema: Value {
-        let variants = ["double", "right", "middle", "triple"]
-        let noVariant = Value.object([
-            "properties": .object(Dictionary(uniqueKeysWithValues: variants.map {
-                ($0, Value.object(["enum": .array([.bool(false)])]))
-            })),
-        ])
-        let selectedVariants = variants.map { selected in
-            Value.object([
-                "properties": .object(Dictionary(uniqueKeysWithValues: variants.map { variant in
-                    (variant, Value.object(["enum": .array([.bool(variant == selected)])]))
-                })),
-                "required": .array([.string(selected)]),
-            ])
-        }
-        return .object(["oneOf": .array([noVariant] + selectedVariants)])
     }
 
     public init(context: MCPToolContext = .shared) {
