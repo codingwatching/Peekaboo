@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep caller screenshot destinations intact when remote evidence is rejected or raw output was not requested, staging ordinary captures before file publication as well as ROI captures. #710.
+
 - Fix host-routed screen observations with Accessibility elements by validating their semantic owner separately from the screen raster target. #715, #710.
 - Fix application name and bundle resolution being blocked by reaped processes lingering in LaunchServices; require repeated native absence while retaining refusal for uncertain or changing process identities. #709.
 
